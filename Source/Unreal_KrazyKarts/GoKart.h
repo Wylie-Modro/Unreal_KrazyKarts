@@ -29,6 +29,7 @@ public:
 private:
 
 	void MoveForward(float val);
+	void MoveRight(float val);
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
@@ -36,11 +37,20 @@ private:
 	UPROPERTY(EditAnywhere)
 	float Mass = 1000.f;
 
+	
+	UPROPERTY(EditAnywhere)
+	float DragCoeffient = 5.f;
+
 	// in Newtons
 	UPROPERTY(EditAnywhere)
 	float MaxThrottleForce = 10000.f;
 
+	// in degree/s 
+	UPROPERTY(EditAnywhere)
+	float MaxStiringThrow = 90.f;
+
 	float Throttle;
+	float StiringThrow;
 
 	FVector Velocity;
 	
