@@ -27,7 +27,20 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
+
 	void MoveForward(float val);
+
+	void UpdateLocationFromVelocity(float DeltaTime);
+
+	// Mass of Car in kgs
+	UPROPERTY(EditAnywhere)
+	float Mass = 1000.f;
+
+	// in Newtons
+	UPROPERTY(EditAnywhere)
+	float MaxThrottleForce = 10000.f;
+
+	float Throttle;
 
 	FVector Velocity;
 	
