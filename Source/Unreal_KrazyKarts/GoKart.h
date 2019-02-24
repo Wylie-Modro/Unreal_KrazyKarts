@@ -33,25 +33,33 @@ private:
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
+	FVector GetRollingResistance();
+	FVector GetAirResistance();
+
 	// Mass of Car in kgs
 	UPROPERTY(EditAnywhere)
 	float Mass = 1000.f;
 
-	
 	UPROPERTY(EditAnywhere)
 	float DragCoeffient = 5.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RollingFrictionCoeffient = 0.05;
 
 	// in Newtons
 	UPROPERTY(EditAnywhere)
 	float MaxThrottleForce = 10000.f;
 
-	// in degree/s 
+	// in m 
 	UPROPERTY(EditAnywhere)
-	float MaxStiringThrow = 90.f;
+	float MinTurningRadius = 15.f;
+
+	// in degree/s 
+//	UPROPERTY(EditAnywhere)
+//	float MaxStiringThrow = 90.f;
 
 	float Throttle;
 	float StiringThrow;
 
 	FVector Velocity;
-	
 };

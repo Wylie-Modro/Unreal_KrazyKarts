@@ -2,6 +2,7 @@
 
 #include "GoKart.h"
 #include "Components/InputComponent.h"
+#include "Engine/World.h"
 
 // Sets default values
 AGoKart::AGoKart()
@@ -23,20 +24,34 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float ChangeInRotation = DeltaTime * MaxStiringThrow * StiringThrow;
-	FQuat RotationApplied(GetActorUpVector(), FMath::DegreesToRadians(ChangeInRotation));
+	//float ChangeInRotation = DeltaTime * MaxStiringThrow * StiringThrow;
+	float ProjectionOfVelocityOnForwardDir = FVector::DotProduct(Velocity, GetActorForwardVector());
+	float ChangeInRotation = ((DeltaTime * ProjectionOfVelocityOnForwardDir) / MinTurningRadius) * StiringThrow; //in Radians
+	FQuat RotationApplied(GetActorUpVector(), ChangeInRotation);
 
 	Velocity = RotationApplied.RotateVector(Velocity);
 	AddActorWorldRotation(RotationApplied);
 	
-	FVector Force = GetActorForwardVector() * MaxThrottleForce * Throttle;
-	FVector AirResistanceForce = FMath::Square(Velocity.Size()) * DragCoeffient * -Velocity.GetSafeNormal();
+	FVector ThrottleForce = GetActorForwardVector() * MaxThrottleForce * Throttle;
 
-	FVector Acceleration = (Force + AirResistanceForce) / Mass;
+	FVector Acceleration = (ThrottleForce + GetAirResistance() + GetRollingResistance()) / Mass;
 
 	Velocity += Acceleration * DeltaTime;
 
 	UpdateLocationFromVelocity(DeltaTime);
+}
+
+FVector AGoKart::GetRollingResistance()
+{
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) { return FVector(0); }
+	float g = (-1) * (World->GetGravityZ())/100.f; // make postive and get in m/s^2
+	return RollingFrictionCoeffient * Mass * g * -(Velocity.GetSafeNormal());
+}
+
+FVector AGoKart::GetAirResistance()
+{
+	return FMath::Square(Velocity.Size()) * DragCoeffient * -Velocity.GetSafeNormal();
 }
 
 void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
