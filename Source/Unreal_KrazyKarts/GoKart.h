@@ -31,6 +31,12 @@ private:
 	void MoveForward(float val);
 	void MoveRight(float val);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_MoveForward(float val);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_MoveRight(float val);
+
 	void UpdateLocationFromVelocity(float DeltaTime);
 
 	FVector GetRollingResistance();
@@ -58,8 +64,20 @@ private:
 //	UPROPERTY(EditAnywhere)
 //	float MaxStiringThrow = 90.f;
 
+	UPROPERTY(Replicated)
 	float Throttle;
+
+	UPROPERTY(Replicated)
 	float StiringThrow;
 
+	UPROPERTY(Replicated)
 	FVector Velocity;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ReplicatedTransform)
+	FTransform ReplicatedTransform;
+
+	UFUNCTION()
+	void OnRep_ReplicatedTransform();
+
+	FString GetTextOfRole(ENetRole Role);
 };
