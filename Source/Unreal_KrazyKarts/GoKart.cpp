@@ -28,8 +28,8 @@ void AGoKart::BeginPlay()
 void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGoKart, ReplicatedTransform);
-	DOREPLIFETIME(AGoKart, Velocity);
+	DOREPLIFETIME(AGoKart, ServerState);
+//	DOREPLIFETIME(AGoKart, Move);
 	DOREPLIFETIME(AGoKart, Throttle);
 	DOREPLIFETIME(AGoKart, StiringThrow);
 }
@@ -39,7 +39,17 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//float ChangeInRotation = DeltaTime * MaxStiringThrow * StiringThrow;
+	if (IsLocallyControlled())
+	{
+		FGoKartMove Move;
+		Move.DeltaTime = DeltaTime;
+		Move.StiringThrow = StiringThrow;
+		Move.Throttle = Throttle;
+		// TODO: Move.Time = idk bro
+
+		Server_SendMove(Move);
+	}
+
 	float ProjectionOfVelocityOnForwardDir = FVector::DotProduct(Velocity, GetActorForwardVector());
 	float ChangeInRotation = ((DeltaTime * ProjectionOfVelocityOnForwardDir) / MinTurningRadius) * StiringThrow; //in Radians
 	FQuat RotationApplied(GetActorUpVector(), ChangeInRotation);
@@ -57,15 +67,17 @@ void AGoKart::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
-		ReplicatedTransform = GetActorTransform();
+		ServerState.Transform = GetActorTransform();
+		ServerState.Velocity = Velocity;
+		// TODO: GetLastMove
 	}
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetTextOfRole(Role), this, FColor::White, DeltaTime);
 }
 
-void AGoKart::OnRep_ReplicatedTransform()
+void AGoKart::OnRep_ReplicatedServerState()
 {
-	SetActorTransform(ReplicatedTransform);
+	SetActorTransform(ServerState.Transform);
 	UE_LOG(LogTemp, Warning, TEXT("Updated"));
 }
 
@@ -109,35 +121,24 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AGoKart::MoveForward(float val)
 {
 	Throttle = val;
-
-	Server_MoveForward(val);
 }
 
 void AGoKart::MoveRight(float val)
 {
 	StiringThrow = val;
-
-	Server_MoveRight(val);
 }
 
-void AGoKart::Server_MoveForward_Implementation(float val)
+void AGoKart::Server_SendMove_Implementation(FGoKartMove Move)
 {
-	Throttle = val;
+	Throttle = Move.Throttle;
+	StiringThrow = Move.StiringThrow;
 }
 
-bool AGoKart::Server_MoveForward_Validate(float val)
+bool AGoKart::Server_SendMove_Validate(FGoKartMove Move)
 {
-	return FMath::Abs(val) <= 1;
-}
-
-void AGoKart::Server_MoveRight_Implementation(float val)
-{
-	StiringThrow = val;
-}
-
-bool AGoKart::Server_MoveRight_Validate(float val)
-{
-	return FMath::Abs(val) <= 1;
+//	return FMath::Abs(val) <= 1;
+	return true;
+	//TODO: Better Implementation  of validate
 }
 
 FString AGoKart::GetTextOfRole(ENetRole Role)

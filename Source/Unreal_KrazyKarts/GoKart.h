@@ -38,7 +38,6 @@ struct FGoKartState
 
 	UPROPERTY()
 	FTransform Transform;
-
 };
 
 
@@ -68,10 +67,7 @@ private:
 	void MoveRight(float val);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveForward(float val);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveRight(float val);
+	void Server_SendMove(FGoKartMove Move);
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
@@ -96,24 +92,22 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MinTurningRadius = 15.f;
 
-	// in degree/s 
-//	UPROPERTY(EditAnywhere)
-//	float MaxStiringThrow = 90.f;
-
 	UPROPERTY(Replicated)
 	float Throttle;
 
 	UPROPERTY(Replicated)
 	float StiringThrow;
 
-	UPROPERTY(Replicated)
 	FVector Velocity;
 
-	UPROPERTY(ReplicatedUsing=OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;
+//	UPROPERTY(Replicated)
+//	FGoKartMove Move;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedServerState)
+	FGoKartState ServerState;
 
 	UFUNCTION()
-	void OnRep_ReplicatedTransform();
+	void OnRep_ReplicatedServerState();
 
 	FString GetTextOfRole(ENetRole Role);
 };
