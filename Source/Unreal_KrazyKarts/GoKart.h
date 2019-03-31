@@ -71,6 +71,10 @@ private:
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
+	void SimulateMove(FGoKartMove Move);
+
+	FString GetTextOfRole(ENetRole Role);
+
 	FVector GetRollingResistance();
 	FVector GetAirResistance();
 
@@ -92,10 +96,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MinTurningRadius = 15.f;
 
-	UPROPERTY(Replicated)
 	float Throttle;
 
-	UPROPERTY(Replicated)
 	float StiringThrow;
 
 	FVector Velocity;
@@ -109,5 +111,4 @@ private:
 	UFUNCTION()
 	void OnRep_ReplicatedServerState();
 
-	FString GetTextOfRole(ENetRole Role);
 };
