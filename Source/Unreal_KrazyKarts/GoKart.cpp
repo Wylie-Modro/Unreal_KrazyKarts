@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 #include "UnrealNetwork.h"
+#include "GameFramework/GameStateBase.h"
 
 // Sets default values
 AGoKart::AGoKart()
@@ -35,24 +36,42 @@ void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (IsLocallyControlled())
+	if (Role == ROLE_AutonomousProxy)
 	{
-		FGoKartMove Move;
-		Move.DeltaTime = DeltaTime;
-		Move.StiringThrow = StiringThrow;
-		Move.Throttle = Throttle;
-		// TODO: Move.Time = idk bro
+		FGoKartMove Move = CreateMove(DeltaTime);
+
+		UnacknowledgedMoves.Add(Move);
+		SimulateMove(Move);
 
 		Server_SendMove(Move);
-
-		SimulateMove(Move);
 	}
+
+	// We are the server and in contol of the pawn
+	if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy)
+	{
+		FGoKartMove Move = CreateMove(DeltaTime);
+		Server_SendMove(Move);
+	}
+
+	if (Role == ROLE_SimulatedProxy)
+	{
+		SimulateMove(ServerState.LastMove);
+	}
+
 }
 
-void AGoKart::SimulateMove(FGoKartMove Move)
+FGoKartMove AGoKart::CreateMove(float DeltaTime)
 {
+	FGoKartMove Move;
+	Move.DeltaTime = DeltaTime;
+	Move.StiringThrow = StiringThrow;
+	Move.Throttle = Throttle;
+	Move.Time = GetWorld()->GetGameState()->GetServerWorldTimeSeconds();
+	return Move;
+}
 
+void AGoKart::SimulateMove(const FGoKartMove& Move)
+{
 	float ProjectionOfVelocityOnForwardDir = FVector::DotProduct(Velocity, GetActorForwardVector());
 	float ChangeInRotation = ((Move.DeltaTime * ProjectionOfVelocityOnForwardDir) / MinTurningRadius) * Move.StiringThrow; //in Radians
 	FQuat RotationApplied(GetActorUpVector(), ChangeInRotation);
@@ -68,14 +87,37 @@ void AGoKart::SimulateMove(FGoKartMove Move)
 
 	UpdateLocationFromVelocity(Move.DeltaTime);
 
-
 	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetTextOfRole(Role), this, FColor::White, Move.DeltaTime);
 }
 
 void AGoKart::OnRep_ReplicatedServerState()
 {
 	SetActorTransform(ServerState.Transform);
+	Velocity = ServerState.Velocity;
+
+	ClearAcknowledgedMoves(ServerState.LastMove);
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		SimulateMove(Move);
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("Updated"));
+}
+
+void AGoKart::ClearAcknowledgedMoves(FGoKartMove pLastMove)
+{
+	TArray<FGoKartMove> NewMoves;
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		if (Move.Time > pLastMove.Time)
+		{
+			NewMoves.Add(Move);
+		}
+	}
+
+	UnacknowledgedMoves = NewMoves;
 }
 
 FVector AGoKart::GetRollingResistance()
@@ -103,7 +145,6 @@ void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
 		Velocity = FVector::ZeroVector;
 	}
 }
-
 
 // Called to bind functionality to input
 void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

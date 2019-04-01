@@ -71,8 +71,12 @@ private:
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
-	void SimulateMove(FGoKartMove Move);
+	void SimulateMove(const FGoKartMove& Move);
 
+	void ClearAcknowledgedMoves(FGoKartMove pLastMove);
+
+	FGoKartMove CreateMove(float DeltaTime);
+	
 	FString GetTextOfRole(ENetRole Role);
 
 	FVector GetRollingResistance();
@@ -111,4 +115,5 @@ private:
 	UFUNCTION()
 	void OnRep_ReplicatedServerState();
 
+	TArray<FGoKartMove> UnacknowledgedMoves;
 };
