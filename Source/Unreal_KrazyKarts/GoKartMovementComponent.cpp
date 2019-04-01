@@ -18,7 +18,6 @@ UGoKartMovementComponent::UGoKartMovementComponent()
 void UGoKartMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 

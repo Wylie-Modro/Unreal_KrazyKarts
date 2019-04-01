@@ -13,6 +13,7 @@ AGoKart::AGoKart()
 	bReplicates = true;
 
 	MovementComponent = CreateDefaultSubobject<UGoKartMovementComponent>(TEXT("MovementComponent"));
+	MovementReplicator = CreateDefaultSubobject<UGoKartMovementReplicator>(TEXT("MovementReplicator"));
 }
 
 // Called when the game starts or when spawned
@@ -26,75 +27,38 @@ void AGoKart::BeginPlay()
 	}
 }
 
-void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGoKart, ServerState);
-}
-
 // Called every frame
 void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	if (MovementComponent == nullptr) { return; }
+	if (MovementReplicator == nullptr) { return; }
 
 	if (Role == ROLE_AutonomousProxy)
 	{
 		FGoKartMove Move = MovementComponent->CreateMove(DeltaTime);
 
-		UnacknowledgedMoves.Add(Move);
+		MovementReplicator->UnacknowledgedMoves.Add(Move);
 		MovementComponent->SimulateMove(Move);
 
-		Server_SendMove(Move);
+		MovementReplicator->Server_SendMove(Move);
 	}
 
 	// We are the server and in contol of the pawn
 	if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy)
 	{
 		FGoKartMove Move = MovementComponent->CreateMove(DeltaTime);
-		Server_SendMove(Move);
+		MovementReplicator->Server_SendMove(Move);
 	}
 
 	if (Role == ROLE_SimulatedProxy)
 	{
-		MovementComponent->SimulateMove(ServerState.LastMove);
+		MovementComponent->SimulateMove(MovementReplicator->ServerState.LastMove);
 	}
 
 }
 
-
-void AGoKart::OnRep_ReplicatedServerState()
-{
-	if (MovementComponent == nullptr) { return; }
-
-	SetActorTransform(ServerState.Transform);
-	MovementComponent->SetVelocity(ServerState.Velocity);
-
-	ClearAcknowledgedMoves(ServerState.LastMove);
-
-	for (const FGoKartMove& Move : UnacknowledgedMoves)
-	{
-		MovementComponent->SimulateMove(Move);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Updated"));
-}
-
-void AGoKart::ClearAcknowledgedMoves(FGoKartMove pLastMove)
-{
-	TArray<FGoKartMove> NewMoves;
-
-	for (const FGoKartMove& Move : UnacknowledgedMoves)
-	{
-		if (Move.Time > pLastMove.Time)
-		{
-			NewMoves.Add(Move);
-		}
-	}
-
-	UnacknowledgedMoves = NewMoves;
-}
 
 
 // Called to bind functionality to input
@@ -118,23 +82,5 @@ void AGoKart::MoveRight(float val)
 	if (MovementComponent == nullptr) { return; }
 
 	MovementComponent->SetStiringThrow(val);
-}
-
-void AGoKart::Server_SendMove_Implementation(FGoKartMove Move)
-{
-	if (MovementComponent == nullptr) { return; }
-
-	MovementComponent->SimulateMove(Move);
-
-	ServerState.LastMove = Move;
-	ServerState.Transform = GetActorTransform();
-	ServerState.Velocity = MovementComponent->GetVelocity();
-}
-
-bool AGoKart::Server_SendMove_Validate(FGoKartMove Move)
-{
-//	return FMath::Abs(val) <= 1;
-	return true;
-	//TODO: Better Implementation  of validate
 }
 
