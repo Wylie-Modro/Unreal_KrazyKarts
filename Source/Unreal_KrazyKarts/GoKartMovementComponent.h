@@ -52,6 +52,8 @@ public:
 	void SetThrottle(float val) { Throttle = val;  }
 	void SetStiringThrow(float val) { StiringThrow = val;  }
 
+	FGoKartMove GetLastMove() { return LastMove; }
+
 private:
 	void UpdateLocationFromVelocity(float DeltaTime);
 
@@ -83,4 +85,6 @@ private:
 	float StiringThrow;
 
 	FVector Velocity;
+
+	FGoKartMove LastMove;
 };

@@ -31,32 +31,6 @@ void AGoKart::BeginPlay()
 void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (MovementComponent == nullptr) { return; }
-	if (MovementReplicator == nullptr) { return; }
-
-	if (Role == ROLE_AutonomousProxy)
-	{
-		FGoKartMove Move = MovementComponent->CreateMove(DeltaTime);
-
-		MovementReplicator->UnacknowledgedMoves.Add(Move);
-		MovementComponent->SimulateMove(Move);
-
-		MovementReplicator->Server_SendMove(Move);
-	}
-
-	// We are the server and in contol of the pawn
-	if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy)
-	{
-		FGoKartMove Move = MovementComponent->CreateMove(DeltaTime);
-		MovementReplicator->Server_SendMove(Move);
-	}
-
-	if (Role == ROLE_SimulatedProxy)
-	{
-		MovementComponent->SimulateMove(MovementReplicator->ServerState.LastMove);
-	}
-
 }
 
 
