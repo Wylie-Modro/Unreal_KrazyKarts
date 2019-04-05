@@ -55,9 +55,18 @@ private:
 
 	UFUNCTION()
 	void OnRep_ReplicatedServerState();
+	void OnRep_AutoProxy_ReplicatedServerState();
+	void OnRep_SimProxy_ReplicatedServerState();
+
+	void UpdateServerState(const FGoKartMove& Move);
+
+	void ClientTick(float DeltaTime);
 
 	UPROPERTY()
 	UGoKartMovementComponent* MovementComponent;
 
-	void UpdateServerState(const FGoKartMove& Move);
+	float ClientTimeSinceLastUpdate;
+	float ClientTimeBetweenLastUpdate;
+
+	FVector StartLocation;
 };
