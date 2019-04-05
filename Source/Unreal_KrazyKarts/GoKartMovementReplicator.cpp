@@ -62,10 +62,13 @@ void UGoKartMovementReplicator::ClientTick(float DeltaTime)
 	if (ClientTimeBetweenLastUpdate < KINDA_SMALL_NUMBER) { return; }
 
 	FVector TargetLocation = ServerState.Transform.GetLocation();
+	FQuat TargetRotation = ServerState.Transform.GetRotation();
 	float LerpRatio = ClientTimeSinceLastUpdate / ClientTimeBetweenLastUpdate;
-	FVector NextCurrentLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+	FVector NextCurrentLocation = FMath::LerpStable(StartTransform.GetLocation(), TargetLocation, LerpRatio);
+	FQuat NextCurrentRotation = FQuat::Slerp(StartTransform.GetRotation(), TargetRotation, LerpRatio);
 
 	GetOwner()->SetActorLocation(NextCurrentLocation);
+	GetOwner()->SetActorRotation(NextCurrentRotation);
 }
 
 void UGoKartMovementReplicator::UpdateServerState(const FGoKartMove& Move)
@@ -107,7 +110,7 @@ void UGoKartMovementReplicator::OnRep_SimProxy_ReplicatedServerState()
 	ClientTimeBetweenLastUpdate = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
 
-	StartLocation = GetOwner()->GetActorLocation();
+	StartTransform = GetOwner()->GetActorTransform();
 }
 
 
