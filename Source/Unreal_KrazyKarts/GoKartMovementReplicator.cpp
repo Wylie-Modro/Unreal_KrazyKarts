@@ -145,8 +145,7 @@ void UGoKartMovementReplicator::OnRep_SimProxy_ReplicatedServerState()
 {
 	ClientTimeBetweenLastUpdate = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
-
-//	StartTransform = GetOwner()->GetActorTransform();
+	
 	if (MeshOffsetRoot != nullptr) 
 	{ 
 		StartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
@@ -180,14 +179,28 @@ void UGoKartMovementReplicator::Server_SendMove_Implementation(FGoKartMove Move)
 	if (MovementComponent == nullptr) { return; }
 
 	MovementComponent->SimulateMove(Move);
+	 
+	ClientTime += Move.DeltaTime;
 
 	UpdateServerState(Move);
 }
 
 bool UGoKartMovementReplicator::Server_SendMove_Validate(FGoKartMove Move)
 {
-//	return FMath::Abs(val) <= 1;
+	float ProposedTime = ClientTime + Move.DeltaTime;
+
+	if (ProposedTime > GetWorld()->TimeSeconds)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Client is cheating: Running too fast"));
+		return false;
+	}
+
+	if (!Move.IsValid()) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("Client is cheating: Input Invalid"));
+		return false; 
+	}
+
 	return true;
-	//TODO: Better Implementation  of validate
 }
 

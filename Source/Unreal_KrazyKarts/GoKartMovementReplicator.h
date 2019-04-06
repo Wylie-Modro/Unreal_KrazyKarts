@@ -84,6 +84,8 @@ private:
 
 	FVector ClientStartVelocity;
 
+	float ClientTime = 0;
+
 	USceneComponent* MeshOffsetRoot;
 
 	UFUNCTION(BlueprintCallable)
