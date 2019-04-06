@@ -83,4 +83,10 @@ private:
 	FTransform StartTransform;
 
 	FVector ClientStartVelocity;
+
+	USceneComponent* MeshOffsetRoot;
+
+	UFUNCTION(BlueprintCallable)
+	void SetMeshOffsetRoot(USceneComponent* Root) { MeshOffsetRoot = Root; }
+
 };

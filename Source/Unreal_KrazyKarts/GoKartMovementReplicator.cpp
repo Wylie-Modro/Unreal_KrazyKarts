@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GoKartMovementReplicator.h"
+#include "GameFramework/Actor.h"
 
 
 // Sets default values for this component's properties
@@ -83,7 +84,9 @@ FHermiteCubicSpline UGoKartMovementReplicator::CreateSpline()
 void UGoKartMovementReplicator::InterpolateLocation(const FHermiteCubicSpline& Spline, const float& LerpRatio)
 {
 	FVector NextCurrentLocation = FMath::CubicInterp(StartTransform.GetLocation(), Spline.StartDerivative, Spline.TargetLocation, Spline.TargetDerivative, LerpRatio);
-	GetOwner()->SetActorLocation(NextCurrentLocation);
+
+	if (MeshOffsetRoot == nullptr) { return; }
+	MeshOffsetRoot->SetWorldLocation(NextCurrentLocation);
 }
 
 void UGoKartMovementReplicator::InterpolateVelocity(const FHermiteCubicSpline& Spline, const float& LerpRatio)
@@ -98,7 +101,9 @@ void UGoKartMovementReplicator::InterpolateRotation(const float& LerpRatio)
 {
 	FQuat TargetRotation = ServerState.Transform.GetRotation();
 	FQuat NextCurrentRotation = FQuat::Slerp(StartTransform.GetRotation(), TargetRotation, LerpRatio);
-	GetOwner()->SetActorRotation(NextCurrentRotation);
+
+	if (MeshOffsetRoot == nullptr) { return; }
+	MeshOffsetRoot->SetWorldRotation(NextCurrentRotation);
 }
 
 
@@ -141,10 +146,17 @@ void UGoKartMovementReplicator::OnRep_SimProxy_ReplicatedServerState()
 	ClientTimeBetweenLastUpdate = ClientTimeSinceLastUpdate;
 	ClientTimeSinceLastUpdate = 0;
 
-	StartTransform = GetOwner()->GetActorTransform();
+//	StartTransform = GetOwner()->GetActorTransform();
+	if (MeshOffsetRoot != nullptr) 
+	{ 
+		StartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
+		StartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
+	}
 
 	if (MovementComponent == nullptr) { return; }
 	ClientStartVelocity = MovementComponent->GetVelocity();
+
+	GetOwner()->SetActorTransform(ServerState.Transform);
 }
 
 
