@@ -24,6 +24,12 @@ struct FGoKartState
 	FTransform Transform;
 };
 
+struct FHermiteCubicSpline
+{
+	FVector StartDerivative, TargetLocation, TargetDerivative;
+};
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_KRAZYKARTS_API UGoKartMovementReplicator : public UActorComponent
 {
@@ -61,6 +67,12 @@ private:
 	void UpdateServerState(const FGoKartMove& Move);
 
 	void ClientTick(float DeltaTime);
+
+	FHermiteCubicSpline CreateSpline();
+
+	void InterpolateLocation(const FHermiteCubicSpline& Spline, const float& LerpRatio);
+	void InterpolateVelocity(const FHermiteCubicSpline& Spline, const float& LerpRatio);
+	void InterpolateRotation(const float& LerpRatio);
 
 	UPROPERTY()
 	UGoKartMovementComponent* MovementComponent;
