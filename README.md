@@ -1,7 +1,7 @@
 **Unreal_KrazyKarts**
 
 # KrazyKarts
-A multiplayer car sandbox used to learn state synchronization, client-side prediction, &amp; various types of interpolation.
+**A multiplayer car sandbox used to learn state synchronization, client-side prediction, &amp; various types of interpolation.**
 
 **Subjects Covered and Implemented:** 
 * Air and Rolling Resistance
@@ -14,10 +14,6 @@ A multiplayer car sandbox used to learn state synchronization, client-side predi
 * Cubic Interpolation 
 
 
-
-
-
 Git Hub link: [https://github.com/Wylie-Modro/GGJ2019]
 
 udemy Unreal Multiplayer Master course: [https://www.udemy.com/unrealmultiplayer/]
-
