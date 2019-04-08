@@ -3,7 +3,7 @@
 # KrazyKarts
 **A multiplayer car sandbox used to learn state synchronization, client-side prediction, &amp; various types of interpolation.**
 
-**Subjects Covered and Implemented:** 
+Subjects Covered and Implemented:
 * Air and Rolling Resistance
 * Client-Side Predition: 
   * Syncing Client and Server DeltaTime
